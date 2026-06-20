@@ -41,7 +41,7 @@ class PerformanceEngine:
             section_name = "small_files" if "SmallFiles" in rule.__class__.__name__ else "data_skew"
             policy = {section_name: self.policy_manager.get_policy(section_name), "finops": finops_policy}
             
-            alert = rule.evaluate(plan, metrics)
+            alert = rule.evaluate(plan, metrics, policy)
             if alert:
                 alert.context = context_name
                 report.alerts.append(alert)

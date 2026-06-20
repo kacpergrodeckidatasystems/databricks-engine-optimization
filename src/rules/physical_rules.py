@@ -8,7 +8,7 @@ class SmallFilesRule(IAnalysisRule):
     def __init__(self, max_file_count: int = 100):
         self.max_file_count = max_file_count
     
-    def evaluate(self, plan_text: str, metrics: Dict[str, Any]) -> Optional[Alert]:
+    def evaluate(self, plan_text: str, metrics: Dict[str, Any], policies: Dict[str, Any] = None) -> Optional[Alert]:
         """Analizuje metryki fizyczne i sprawdza czy liczba plików przekracza próg."""
         num_files = metrics.get("num_files", 0)
         
@@ -28,7 +28,7 @@ class SmallFilesRule(IAnalysisRule):
 class MissedBroadcastRule(IAnalysisRule):
     """Reguła wykrywająca pominięte możliwości użycia Broadcast Join."""
     
-    def evaluate(self, plan_text: str, metrics: Dict[str, Any]) -> Optional[Alert]:
+    def evaluate(self, plan_text: str, metrics: Dict[str, Any], policies: Dict[str, Any] = None) -> Optional[Alert]:
         """Analizuje plan fizyczny w poszukiwaniu kosztownych operacji Shuffle, które mogły być Broadcast."""
         # Szukamy wzorca SortMergeJoin lub ShuffledHashJoin w planie
         if re.search(r"SortMergeJoin|ShuffledHashJoin", plan_text, re.IGNORECASE):
@@ -148,8 +148,9 @@ class OverPartitioningRule(IAnalysisRule):
                             f"Partycjonowanie tabeli Delta Lake po kolumnach o wysokiej kardynalności "
                             f"generuje tysiące mikrokatalogów w pamięci masowej (S3/ADLS), co paraliżuje "
                             f"Driver JVM podczas odczytu samych metadanych. Konfiguracyjny limit bezpieczny: {limit_partitions}.",
+                fix="Zrezygnuj z fizycznego zapisu 'partitionBy' na kolumnach o wysokiej zmienności (kardynalności). W Delta Lake na klastrach Serverless zamiast partycjonowania katalogów zastosuj nowoczesne Liquid Clustering za pomocą klauzuli 'CLUSTER BY'.",
                 severity="HIGH",
-                fix="Zrezygnuj z fizycznego zapisu 'partitionBy' na kolumnach o wysokiej zmienności (kardynalności). W Delta Lake na klastrach Serverless zamiast partycjonowania katalogów zastosuj nowoczesne Liquid Clustering za pomocą klauzuli 'CLUSTER BY'." # <-- TUTAJ DODAJEMY BRAKUJĄCY ARGUMENT
+                metrics_captured={"evidence": evidence, "limit_partitions": limit_partitions}
             )
             
         return None

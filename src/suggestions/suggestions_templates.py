@@ -18,5 +18,17 @@ df_final = df_heavy.join(broadcast(df_light), "key")"""
 df.filter(F.col("temperature").cast("string") == "25")
 # Użyj poprawnego typu danych:
 df.filter(F.col("temperature") == 25)"""
+    },
+    "PERF-004": {
+        "text": "Usuń fizyczne partycjonowanie po kolumnach o wysokiej kardynalności. Zastosuj Liquid Clustering.",
+        "code": """# Zamiast partitionBy:
+# df.write.partitionBy("timestamp").format("delta").save(table_path)
+
+# Użyj CLUSTER BY w Delta Lake:
+spark.sql('''
+    CREATE TABLE {table_name}
+    CLUSTER BY (date_column, category)
+    AS SELECT * FROM source_table
+''')"""
     }
 }

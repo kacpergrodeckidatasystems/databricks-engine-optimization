@@ -13,6 +13,7 @@ class Alert:
     fix: str
     severity: str = "WARNING"
     context: str = ""
+    metrics_captured: Dict[str, Any] = field(default_factory=dict)
 
 class IMetricsReader(ABC):
     """Interfejs dla komponentów zbierających metryki (np. z EXPLAIN lub Event Logów)."""
@@ -27,7 +28,7 @@ class IMetricsReader(ABC):
 class IAnalysisRule(ABC):
     """Interfejs dla pojedynczych reguł optymalizacyjnych (Detektywów)."""
     @abstractmethod
-    def evaluate(self, plan_text: str, metrics: Dict[str, Any]) -> Optional[Alert]:
+    def evaluate(self, plan_text: str, metrics: Dict[str, Any], policies: Dict[str, Any] = None) -> Optional[Alert]:
         pass
 
 class IReporter(ABC):
