@@ -23,7 +23,7 @@ class PerformanceEngine:
         self.cost_translator = cost_translator
         self.reporter = reporter
 
-    def run_audit(self, context_name: str = "Proces-ETL-Bronze"):
+    def run_audit(self, context_name: str = "ETL-Bronze-Process"):
         plan = self.reader.get_execution_plan()
         metrics = self.reader.get_physical_metrics()
         
@@ -37,7 +37,7 @@ class PerformanceEngine:
         )
         
         for rule in self.rules:
-            # Dopasowanie sekcji polityki dla konkretnej reguły (nie używane w aktualnej implementacji)
+            # Policy section matching for specific rule (not used in current implementation)
             section_name = "small_files" if "SmallFiles" in rule.__class__.__name__ else "data_skew"
             policy = {section_name: self.policy_manager.get_policy(section_name), "finops": finops_policy}
             
@@ -46,7 +46,7 @@ class PerformanceEngine:
                 alert.context = context_name
                 report.alerts.append(alert)
                 
-                # Wstrzyknięcie dedykowanej sugestii i wyliczeń kosztów
+                # Inject dedicated suggestion and cost calculations
                 suggestion = self.remediation_engine.generate_suggestion(alert, cluster_ctx)
                 report.suggestions.append(suggestion)
                 

@@ -10,23 +10,23 @@ class EnvironmentProvider:
 
     def determine_cluster_context(self) -> ClusterContext:
         """
-        Bada właściwości runtime sesji Spark Connect / Serverless.
-        Używa bezpiecznych bloków try-except, zapobiegając AnalysisException.
+        Examines runtime properties of Spark Connect / Serverless session.
+        Uses safe try-except blocks, preventing AnalysisException.
         """
         context = ClusterContext()
         
-        # 1. Sprawdzenie typu klienta (Spark Connect vs Tradycyjny Session)
+        # 1. Check client type (Spark Connect vs Traditional Session)
         is_connect = "pyspark.sql.connect" in str(type(self.spark))
         
         if is_connect:
-            # Na Spark Connect (Serverless/Shared) parametry są predefiniowane i zablokowane do odczytu
+            # On Spark Connect (Serverless/Shared) parameters are predefined and locked for reading
             context.is_serverless = True
-            context.aqe_enabled = True       # Databricks Runtime 13.x+ ma domyślnie włączone AQE
-            context.photon_enabled = True    # Serverless domyślnie wymusza silnik Photon
-            logger.info("[ENVIRONMENT] Wykryto architekturę Spark Connect (Serverless Safe Mode).")
+            context.aqe_enabled = True       # Databricks Runtime 13.x+ has AQE enabled by default
+            context.photon_enabled = True    # Serverless enforces Photon engine by default
+            logger.info("[ENVIRONMENT] Detected Spark Connect architecture (Serverless Safe Mode).")
             return context
 
-        # 2. Fallback dla tradycyjnych klastrów dedykowanych (Single User / Legacy)
+        # 2. Fallback for traditional dedicated clusters (Single User / Legacy)
         try:
             aqe = self.spark.conf.get("spark.sql.adaptive.enabled", "true")
             context.aqe_enabled = aqe.lower() == "true"
@@ -34,6 +34,6 @@ class EnvironmentProvider:
             photon = self.spark.conf.get("spark.databricks.photon.enabled", "false")
             context.photon_enabled = photon.lower() == "true"
         except Exception as e:
-            logger.warning(f"[ENVIRONMENT] Nie można odczytać konfiguracji sesji, używam domyślnych: {str(e)}")
+            logger.warning(f"[ENVIRONMENT] Cannot read session configuration, using defaults: {str(e)}")
             
         return context

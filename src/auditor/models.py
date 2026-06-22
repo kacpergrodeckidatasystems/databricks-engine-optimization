@@ -16,7 +16,7 @@ class Alert:
     metrics_captured: Dict[str, Any] = field(default_factory=dict)
 
 class IMetricsReader(ABC):
-    """Interfejs dla komponentów zbierających metryki (np. z EXPLAIN lub Event Logów)."""
+    """Interface for components collecting metrics (e.g., from EXPLAIN or Event Logs)."""
     @abstractmethod
     def get_execution_plan(self) -> str:
         pass
@@ -26,13 +26,13 @@ class IMetricsReader(ABC):
         pass
 
 class IAnalysisRule(ABC):
-    """Interfejs dla pojedynczych reguł optymalizacyjnych (Detektywów)."""
+    """Interface for individual optimization rules (Detectors)."""
     @abstractmethod
     def evaluate(self, plan_text: str, metrics: Dict[str, Any], policies: Dict[str, Any] = None) -> Optional[Alert]:
         pass
 
 class IReporter(ABC):
-    """Interfejs dla warstwy wyjściowej systemu."""
+    """Interface for system output layer."""
     @abstractmethod
     def publish(self, alerts: list[Alert]) -> None:
         pass

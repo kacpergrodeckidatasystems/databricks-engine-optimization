@@ -3,7 +3,7 @@ import os
 
 class PolicyManager:
     def __init__(self, config_dict: Dict[str, Any] = None):
-        # Domyślne polityki, gdyby brakowało pliku YAML w środowisku chmurowym
+        # Default policies, in case YAML file is missing in cloud environment
         self._policies = config_dict or {
             "small_files": {"max_file_count": 100, "threshold_size_mb": 10.0},
             "data_skew": {"max_duration_ratio": 5.0},

@@ -7,15 +7,15 @@ class CostTranslator:
         self.cores = finops_policy.get("estimated_core_count", 8)
 
     def calculate_waste(self, alert: Alert) -> float:
-        """Przelicza narzut techniczny anomalii na realne, szacowane straty finansowe (USD)."""
+        """Converts technical overhead of anomaly to real, estimated financial losses (USD)."""
         if alert.rule_id == "PERF-001":
-            # Wykładniczy wzrost kosztu zarządzania metadanymi tysięcy małych plików
-            # Próbujemy wydobyć liczbę plików z opisu alerty
+            # Exponential increase in metadata management cost for thousands of small files
+            # Try to extract file count from alert description
             import re
-            match = re.search(r"(\d+)\s+plik", alert.description)
+            match = re.search(r"(\d+)\s+file", alert.description)
             files = int(match.group(1)) if match else 100
             return round((files * 0.0015) * self.dbu_cost, 4)
         elif alert.rule_id == "PERF-002":
-            # Narzut na pełny sieciowy Shuffle Exchange małej tabeli
+            # Overhead for full network Shuffle Exchange of small table
             return round(0.50 * self.dbu_cost, 4)
         return 0.0

@@ -9,8 +9,8 @@ logger = logging.getLogger("DataFrameExplainReader")
 class DataFrameExplainReader(IMetricsReader):
     def __init__(self, spark: SparkSession, df: DataFrame = None, table_name: str = None, source_volume_path: str = None):
         """
-        Defensywny czytnik metadanych obsługujący ścieżki tekstowe tabel chmurowych 
-        oraz bezpośrednie instancje obiektów DataFrame in-memory.
+        Defensive metadata reader supporting cloud table text paths 
+        and direct in-memory DataFrame object instances.
         """
         self.spark = spark
         self.df = df
@@ -18,17 +18,17 @@ class DataFrameExplainReader(IMetricsReader):
         self.source_path = source_volume_path
 
     def _validate_and_resolve_target(self) -> bool:
-        """Weryfikuje obecność obiektów źródłowych przed analizą."""
+        """Verifies presence of source objects before analysis."""
         if self.table_name:
             try:
                 clean_name = self.table_name.replace("`", "")
                 exists = self.spark.catalog.tableExists(clean_name)
                 if not exists:
-                    logger.error(f"[FAIL-FAST] Tabela '{clean_name}' nie istnieje w Unity Catalog.")
+                    logger.error(f"[FAIL-FAST] Table '{clean_name}' does not exist in Unity Catalog.")
                     return False
                 return True
             except Exception as e:
-                logger.error(f"[FAIL-FAST] Wyjątek podczas sprawdzania metastore: {str(e)}")
+                logger.error(f"[FAIL-FAST] Exception during metastore check: {str(e)}")
                 return False
 
         return self.df is not None
@@ -36,18 +36,18 @@ class DataFrameExplainReader(IMetricsReader):
     @trace_execution
     @safe_execution(default_factory=str)
     def get_execution_plan(self) -> str:
-        """Pobiera fizyczny plan wykonania Catalyst, rozróżniając typ źródła wejściowego."""
+        """Retrieves Catalyst physical execution plan, distinguishing input source type."""
         if not self._validate_and_resolve_target():
-            logger.warning("[AUDIT-SKIP] Brak prawidłowego źródła danych do wygenerowania planu.")
+            logger.warning("[AUDIT-SKIP] No valid data source to generate plan.")
             return ""
 
-        # ŚCIEŻKA A: Jeśli badamy fizyczną tabelę z Unity Catalog (np. Audyt 3 / Audyt 4)
+        # PATH A: If examining physical table from Unity Catalog (e.g., Audit 3 / Audit 4)
         if self.table_name:
             clean_name = self.table_name.replace("`", "")
             plan_df = self.spark.sql(f"EXPLAIN EXTENDED SELECT * FROM {clean_name}")
             return plan_df.take(1)[0][0]
         
-        # ŚCIEŻKA B: Jeśli badamy bezpośredni obiekt DataFrame przekazany w locie (np. Audyt 1)
+        # PATH B: If examining direct DataFrame object passed on the fly (e.g., Audit 1)
         self.df.createOrReplaceTempView("temp_auditor_view")
         plan_df = self.spark.sql("EXPLAIN EXTENDED SELECT * FROM temp_auditor_view")
         return plan_df.take(1)[0][0]
@@ -55,10 +55,10 @@ class DataFrameExplainReader(IMetricsReader):
     @trace_execution
     @safe_execution(default_factory=dict)
     def get_physical_metrics(self) -> Dict[str, Any]:
-        """Agreguje metryki strukturalne ze schematu oraz wolumetrykę z katalogów fizycznych."""
+        """Aggregates structural metrics from schema and volumetrics from physical directories."""
         metrics = {"num_files": 0, "total_size_bytes": 0, "schema_fields": {}}
         
-        # Leniwe wiązanie DataFrame na podstawie nazwy, jeśli obiekt df jest pusty
+        # Lazy DataFrame binding based on name, if df object is empty
         if self.df is None and self.table_name:
             try:
                 clean_name = self.table_name.replace("`", "")
@@ -70,7 +70,7 @@ class DataFrameExplainReader(IMetricsReader):
             try:
                 metrics["schema_fields"] = {f.name: f.dataType.simpleString() for f in self.df.schema}
             except Exception as e:
-                logger.warning(f"[METRICS-SKIP] Błąd mapowania schematu: {str(e)}")
+                logger.warning(f"[METRICS-SKIP] Schema mapping error: {str(e)}")
         
         if self.source_path:
             try:
@@ -80,6 +80,6 @@ class DataFrameExplainReader(IMetricsReader):
                 metrics["num_files"] = len(files)
                 metrics["total_size_bytes"] = sum([f.size for f in files])
             except Exception as e:
-                logger.warning(f"[METRICS-SKIP] Błąd odczytu wolumetryki plików: {str(e)}")
+                logger.warning(f"[METRICS-SKIP] File volumetrics read error: {str(e)}")
                 
         return metrics

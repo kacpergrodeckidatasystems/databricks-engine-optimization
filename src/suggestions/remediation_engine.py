@@ -3,18 +3,18 @@ from src.suggestions.suggestions_templates import TEMPLATES
 
 class RemediationEngine:
     def generate_suggestion(self, alert: Alert, cluster_ctx: ClusterContext) -> Suggestion:
-        """Buduje spersonalizowaną podpowiedź naprawczą w oparciu o stan techniczny klastra."""
+        """Builds personalized remediation hint based on cluster technical state."""
         template = TEMPLATES.get(alert.rule_id, {
-            "text": "Brak predefiniowanej sugestii automatycznej.",
-            "code": "# Przeanalizuj problem manualnie."
+            "text": "No predefined automatic suggestion available.",
+            "code": "# Analyze problem manually."
         })
         
         remediation_text = template["text"]
         code_template = template["code"]
         
-        # Kontekstowa modyfikacja podpowiedzi na bazie parametrów klastra
+        # Contextual suggestion modification based on cluster parameters
         if alert.rule_id == "PERF-001" and cluster_ctx.is_serverless:
-            remediation_text += " [Uwaga FinOps: Na klastrach Serverless kompaktowanie wykonuj przyrostowo!]"
+            remediation_text += " [FinOps Note: On Serverless clusters, perform compaction incrementally!]"
             
         return Suggestion(
             rule_id=alert.rule_id,
