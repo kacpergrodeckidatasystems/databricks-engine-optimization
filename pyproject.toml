@@ -1,0 +1,81 @@
+[build-system]
+# Definicja standardowego silnika budującego paczkę .whl
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "apm-spark-auditor"
+version = "1.0.0"
+description = "Zautomatyzowany silnik APM & FinOps dla Apache Spark i Databricks"
+readme = "README.md"
+authors = [
+    { name = "Kacper Grodecki", email = "kacpra.grodeckiego@gmail.com" }
+]
+# SZTYWNE BLOKOWANIE WERSJI: Wymuszamy Python 3.11 dla zachowania 100% parzystości
+requires-python = "==3.11.*"
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+# =========================================================================
+# 📦 ŚRODOWISKO PRODUKCYJNE (Core Dependencies)
+# =========================================================================
+dependencies = [
+    "pydantic>=2.0.0",      # Walidacja polityk i konfiguracji reguł
+    "sqlparse>=0.4.0",      # Parsowanie surowych planów SQL Catalysta
+]
+
+[project.optional-dependencies]
+dev = [
+    "pyspark==4.0.3",
+    "delta-spark>=4.0.0,<4.1.0", # <-- POPRAWKA: dopasowanie do requirements.txt
+    "black>=24.0.0",
+    "ruff>=0.3.0",
+]
+
+# =========================================================================
+# 🧪 ŚRODOWISKO TESTOWE
+# =========================================================================
+test = [
+    "pytest>=8.0.0",        
+    "pytest-mock>=3.10.0",  
+    "coverage>=7.0.0",      
+]
+
+# =========================================================================
+# ⚙️ KONFIGURACJA NARZĘDZI POMOCNICZYCH
+# =========================================================================
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+exclude = ["docker*", "generators*", "tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+# POPRAWKA: Dodajemy instrukcję --ignore dla notatnika Databricks
+addopts = "--strict-markers --doctest-modules --ignore=tests/Run_Tests_Notebook.py -p no:cacheprovider"
+
+# POPRAWKA: Rejestracja wszystkich używanych markerów, aby zaspokoić --strict-markers
+markers = [
+    "unit: Testy jednostkowe oparte na mockach (szybkie)",
+    "integration: Testy integracyjne łączące komponenty",
+    "system: Testy systemowe i scenariusze End-to-End",
+    "local_spark: Testy przeznaczone wyłącznie dla lokalnego Sparka",
+    "databricks: Testy wymagające kontekstu chmury Databricks",
+    "slow: Testy wymagające większych zasobów czasowych"
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "W", "C90"]
+ignore = ["E501"]

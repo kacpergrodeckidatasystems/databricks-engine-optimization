@@ -1,0 +1,73 @@
+# =========================================================================
+# SYSTEMOWE I IDE
+# =========================================================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================================================================
+# PYTHON (Kompilacja i Pamięć Podręczna)
+# =========================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# =========================================================================
+# LOKALNE ŚRODOWISKO WIRTUALNE (VENV)
+# =========================================================================
+venv/
+.venv/
+env/
+.env
+
+# =========================================================================
+# DYSTRYBUCJA I BUDOWANIE PACZEK (.WHL)
+# =========================================================================
+build/
+dist/
+*.egg-info/
+.eggs/
+lib/
+lib64/
+
+# =========================================================================
+# TESTY I JAKOŚĆ KODU (PyTest & Coverage & Ruff)
+# =========================================================================
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.cache/
+
+# =========================================================================
+# APACHE SPARK & DELTA LAKE (Lokalne bazy i logi)
+# =========================================================================
+# Blokuje lokalne bazy danych Hive i Derby tworzone automatycznie przez Sparka
+metastore_db/
+derby.log
+spark-warehouse/
+.spark-warehouse/
+
+# Blokuje lokalne punkty kontrolne checkpointów
+checkpoint/
+.checkpoint/
+
+# =========================================================================
+# DOCKER (Lokalne stany kontenerów)
+# =========================================================================
+.docker/
+*.log
+
+# =========================================================================
+# DANE I LABORATORIA (Duże pliki testowe)
+# =========================================================================
+# Blokuje wrzucanie surowych plików IoT/BESS na repozytorium gita
+*.csv
+*.json
+*.parquet
+*.avro
