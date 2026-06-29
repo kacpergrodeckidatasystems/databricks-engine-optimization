@@ -11,12 +11,12 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from src.rules.physical_rules import (
+from apm_spark_auditor.rules.physical_rules import (
     SmallFilesRule,
     TypeCastingRule as PhysicalTypeCastingRule,
     MissingOptimizationRule,
 )
-from src.rules.query_rules import (
+from apm_spark_auditor.rules.query_rules import (
     TypeCastingRule as QueryTypeCastingRule,
     CartesianProductRule,
     ExplodeAbuseRule,

@@ -16,23 +16,23 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 # 2. Import core components of heuristic engine
-from src.auditor.engine import PerformanceEngine
-from src.readers.dataframe_reader import DataFrameExplainReader
-from src.policies.policy_manager import PolicyManager
-from src.context.environment_provider import EnvironmentProvider
-from src.suggestions.remediation_engine import RemediationEngine
-from src.finops.cost_translator import CostTranslator
-from src.reporters.console_reporter import ConsoleReporter
+from apm_spark_auditor.auditor.engine import PerformanceEngine
+from apm_spark_auditor.readers.dataframe_reader import DataFrameExplainReader
+from apm_spark_auditor.policies.policy_manager import PolicyManager
+from apm_spark_auditor.context.environment_provider import EnvironmentProvider
+from apm_spark_auditor.suggestions.remediation_engine import RemediationEngine
+from apm_spark_auditor.finops.cost_translator import CostTranslator
+from apm_spark_auditor.reporters.console_reporter import ConsoleReporter
 
 # 3. Import complete package of 10 detectors (PERF-001 to PERF-010)
-from src.rules.physical_rules import (
+from apm_spark_auditor.rules.physical_rules import (
     SmallFilesRule,
     MissedBroadcastRule,
     OverPartitioningRule,
     DataSkewRule,
     MissingOptimizationRule,
 )
-from src.rules.query_rules import (
+from apm_spark_auditor.rules.query_rules import (
     TypeCastingRule,
     CartesianProductRule,
     ExplodeAbuseRule,

@@ -1,4 +1,4 @@
-from src.auditor.models import IReporter, AuditReport
+from apm_spark_auditor.auditor.models import IReporter, AuditReport
 
 
 class ConsoleReporter(IReporter):

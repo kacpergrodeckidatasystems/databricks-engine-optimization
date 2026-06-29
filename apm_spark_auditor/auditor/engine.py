@@ -1,10 +1,10 @@
 from typing import List
 from datetime import datetime
-from src.auditor.models import IMetricsReader, IAnalysisRule, IReporter, AuditReport
-from src.policies.policy_manager import PolicyManager
-from src.context.environment_provider import EnvironmentProvider
-from src.suggestions.remediation_engine import RemediationEngine
-from src.finops.cost_translator import CostTranslator
+from apm_spark_auditor.auditor.models import IMetricsReader, IAnalysisRule, IReporter, AuditReport
+from apm_spark_auditor.policies.policy_manager import PolicyManager
+from apm_spark_auditor.context.environment_provider import EnvironmentProvider
+from apm_spark_auditor.suggestions.remediation_engine import RemediationEngine
+from apm_spark_auditor.finops.cost_translator import CostTranslator
 
 
 class PerformanceEngine:

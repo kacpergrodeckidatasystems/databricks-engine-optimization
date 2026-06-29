@@ -222,7 +222,7 @@ databricks fs cp dist/apm_spark_auditor-1.0.0-py3-none-any.whl dbfs:/FileStore/l
 
 ```python
 from pyspark.sql import SparkSession
-from src.run.main_trigger import APMAutomatedOrchestrator
+from apm_spark_auditor.run.main_trigger import APMAutomatedOrchestrator
 
 # Initialize Spark session
 spark = SparkSession.builder \
@@ -260,7 +260,7 @@ apm-audit --table "catalog.schema.table_name" --context "production_etl"
 
 ```python
 from pyspark.sql import SparkSession
-from src.run.main_trigger import APMAutomatedOrchestrator
+from apm_spark_auditor.run.main_trigger import APMAutomatedOrchestrator
 
 spark = SparkSession.builder.master("local[*]").appName("Small-Files-Demo").getOrCreate()
 
@@ -339,7 +339,7 @@ for table_name in tables:
 Customize detection thresholds via [`PolicyManager`](src/policies/policy_manager.py):
 
 ```python
-from src.policies.policy_manager import PolicyManager
+from apm_spark_auditor.policies.policy_manager import PolicyManager
 
 custom_policies = {
     "small_files": {
@@ -372,7 +372,7 @@ The system automatically detects runtime context:
 Override detection if needed:
 
 ```python
-from src.context.environment_provider import EnvironmentProvider
+from apm_spark_auditor.context.environment_provider import EnvironmentProvider
 
 env_provider = EnvironmentProvider(spark)
 cluster_ctx = env_provider.determine_cluster_context()

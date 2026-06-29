@@ -11,13 +11,13 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from src.auditor.engine import PerformanceEngine
-from src.readers.dataframe_reader import DataFrameExplainReader
-from src.rules.physical_rules import SmallFilesRule
-from src.rules.query_rules import CartesianProductRule
-from src.policies.policy_manager import PolicyManager
-from src.suggestions.remediation_engine import RemediationEngine
-from src.finops.cost_translator import CostTranslator
+from apm_spark_auditor.auditor.engine import PerformanceEngine
+from apm_spark_auditor.readers.dataframe_reader import DataFrameExplainReader
+from apm_spark_auditor.rules.physical_rules import SmallFilesRule
+from apm_spark_auditor.rules.query_rules import CartesianProductRule
+from apm_spark_auditor.policies.policy_manager import PolicyManager
+from apm_spark_auditor.suggestions.remediation_engine import RemediationEngine
+from apm_spark_auditor.finops.cost_translator import CostTranslator
 
 # Registration of integration test group for local environment
 pytestmark = pytest.mark.integration
