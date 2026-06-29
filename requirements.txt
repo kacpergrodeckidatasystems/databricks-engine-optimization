@@ -1,6 +1,6 @@
 # requirements.txt - Pure PySpark Engine (Fixed Parity)
 pyspark==4.0.3
-delta-spark>=4.0.0,<4.1.0  # <-- POPRAWKA: pip pobierze najwyższą pasującą wersję (4.0.1)
+delta-spark>=4.0.0,<4.1.0
 pydantic>=2.0.0
 sqlparse>=0.4.0
 pytest>=8.0.0

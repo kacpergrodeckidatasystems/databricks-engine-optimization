@@ -2,9 +2,9 @@ services:
   apm-auditor-runner:
     build:
       context: .
-      dockerfile: dockerfile  # Zmień na docker/app/Dockerfile jeśli przeniosłeś plik
+      dockerfile: docker/app/dockerfile  
     container_name: apm-spark-runner
     volumes:
       - .:/app
-    tty: true          # 👈 POPRAWKA: Emuluje stały terminal i trzyma kontener przy życiu
-    stdin_open: true   # 👈 POPRAWKA: Trzyma otwarty strumień standardowego wejścia
+    tty: true 
+    stdin_open: true

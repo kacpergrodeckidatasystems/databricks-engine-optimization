@@ -1,5 +1,6 @@
 # tests/integration/test_engine_integration_local.py
 import sys
+
 sys.dont_write_bytecode = True
 
 import pytest
@@ -12,42 +13,42 @@ if project_root not in sys.path:
 
 from src.auditor.engine import PerformanceEngine
 from src.readers.dataframe_reader import DataFrameExplainReader
-from src.rules.physical_rules import SmallFilesRule, MissedBroadcastRule
+from src.rules.physical_rules import SmallFilesRule
 from src.rules.query_rules import CartesianProductRule
 from src.policies.policy_manager import PolicyManager
 from src.suggestions.remediation_engine import RemediationEngine
 from src.finops.cost_translator import CostTranslator
-from src.reporters.console_reporter import ConsoleReporter
 
-# Rejestracja grupy testów integracyjnych dla środowiska lokalnego
+# Registration of integration test group for local environment
 pytestmark = pytest.mark.integration
 
 
 class TestEngineIntegrationLocal:
     """Testy integracyjne potoku APM Auditor na lokalnym backendzie Spark."""
 
-    def test_complete_pipeline_with_small_files_violation(self, environment_provider, sample_policies, mock_dataframe):
+    def test_complete_pipeline_with_small_files_violation(
+        self, environment_provider, sample_policies, mock_dataframe
+    ):
         """
-        Test integruje Reader, Engine, Reguły i Translator kosztów.
-        Sprawdza, czy przekroczenie limitu plików wygeneruje poprawny raport FinOps.
+        Test integrates Reader, Engine, Rules and Cost Translator.
+        Checks whether exceeding file limit will generate correct FinOps report.
         """
-        # 1. Konfiguracja Readera z zamakowaną odpowiedzią o planie i wysokiej liczbie plików (350)
+        # 1. Configure Reader with mocked response about plan and high file count (350)
         mock_reader = DataFrameExplainReader(spark=MagicMock(), df=mock_dataframe)
         mock_reader.get_execution_plan = Mock(return_value="== Physical Plan ==\nFileScan parquet")
-        mock_reader.get_physical_metrics = Mock(return_value={
-            "num_files": 350, 
-            "schema_fields": {"id": "int"}
-        })
+        mock_reader.get_physical_metrics = Mock(
+            return_value={"num_files": 350, "schema_fields": {"id": "int"}}
+        )
 
-        # 2. Inicjalizacja komponentów z rzeczywistymi politykami
+        # 2. Initialize components with real policies
         policy_manager = PolicyManager(config_dict=sample_policies)
         remediation_engine = RemediationEngine()
         cost_translator = CostTranslator(sample_policies["finops"])
-        
-        # Mockujemy reporter, aby przechwycić ostateczny obiekt AuditReport przekazany do publikacji
+
+        # Mock reporter to capture final AuditReport object passed to publication
         mock_reporter = Mock()
 
-        # 3. Złożenie silnika i rejestracja lokalnej reguły małych plików
+        # 3. Assemble engine and register local small files rule
         engine = PerformanceEngine(
             reader=mock_reader,
             rules=[SmallFilesRule(max_file_count=100)],
@@ -55,31 +56,34 @@ class TestEngineIntegrationLocal:
             env_provider=environment_provider,
             remediation_engine=remediation_engine,
             cost_translator=cost_translator,
-            reporter=mock_reporter
+            reporter=mock_reporter,
         )
 
-        # 4. Wykonanie pełnego auditu
+        # 4. Execute full audit
         engine.run_audit(context_name="integration_bronze_telemetry")
 
-        # 5. Asercja: Sprawdzenie integracji międzykomponentowej
+        # 5. Assertion: Check inter-component integration
         assert mock_reporter.publish.called
-        
-        # Wyciągamy raport, który trafił do reportera
+
+        # Extract report that was sent to reporter
         report = mock_reporter.publish.call_args[0][0]
         assert report.context_name == "integration_bronze_telemetry"
         assert len(report.alerts) == 1
         assert report.alerts[0].rule_id == "PERF-001"
-        assert report.total_estimated_waste_usd > 0.0  # Translator kosztów naliczył stratę FinOps
+        assert report.total_estimated_waste_usd > 0.0  # Cost translator calculated FinOps waste
 
-    def test_pipeline_with_multiple_rules_triggered(self, environment_provider, sample_policies, mock_dataframe):
+    def test_pipeline_with_multiple_rules_triggered(
+        self, environment_provider, sample_policies, mock_dataframe
+    ):
         """Weryfikacja integracji silnika przy jednoczesnym wykryciu wielu anomalii."""
         mock_reader = DataFrameExplainReader(spark=MagicMock(), df=mock_dataframe)
-        # Plan zawiera jawny iloczyn kartezjański, a metryki wskazują na problem z małymi plikami
-        mock_reader.get_execution_plan = Mock(return_value="== Physical Plan ==\nCartesianProduct node")
-        mock_reader.get_physical_metrics = Mock(return_value={
-            "num_files": 400,
-            "schema_fields": {}
-        })
+        # Plan contains explicit cartesian product, and metrics indicate small files problem
+        mock_reader.get_execution_plan = Mock(
+            return_value="== Physical Plan ==\nCartesianProduct node"
+        )
+        mock_reader.get_physical_metrics = Mock(
+            return_value={"num_files": 400, "schema_fields": {}}
+        )
 
         mock_reporter = Mock()
         engine = PerformanceEngine(
@@ -89,11 +93,11 @@ class TestEngineIntegrationLocal:
             env_provider=environment_provider,
             remediation_engine=RemediationEngine(),
             cost_translator=CostTranslator(sample_policies["finops"]),
-            reporter=mock_reporter
+            reporter=mock_reporter,
         )
 
         engine.run_audit(context_name="multi_rule_integration")
 
         report = mock_reporter.publish.call_args[0][0]
-        # Potok zintegrował i zagregował alarmy z obu różnych klas reguł (Physical + Query)
+        # Pipeline integrated and aggregated alerts from both different rule classes (Physical + Query)
         assert len(report.alerts) == 2

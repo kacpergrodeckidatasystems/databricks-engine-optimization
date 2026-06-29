@@ -6,15 +6,18 @@ from src.context.environment_provider import EnvironmentProvider
 from src.suggestions.remediation_engine import RemediationEngine
 from src.finops.cost_translator import CostTranslator
 
+
 class PerformanceEngine:
-    def __init__(self, 
-                 reader: IMetricsReader, 
-                 rules: List[IAnalysisRule], 
-                 policy_manager: PolicyManager,
-                 env_provider: EnvironmentProvider,
-                 remediation_engine: RemediationEngine,
-                 cost_translator: CostTranslator,
-                 reporter: IReporter):
+    def __init__(
+        self,
+        reader: IMetricsReader,
+        rules: List[IAnalysisRule],
+        policy_manager: PolicyManager,
+        env_provider: EnvironmentProvider,
+        remediation_engine: RemediationEngine,
+        cost_translator: CostTranslator,
+        reporter: IReporter,
+    ):
         self.reader = reader
         self.rules = rules
         self.policy_manager = policy_manager
@@ -26,30 +29,31 @@ class PerformanceEngine:
     def run_audit(self, context_name: str = "ETL-Bronze-Process"):
         plan = self.reader.get_execution_plan()
         metrics = self.reader.get_physical_metrics()
-        
+
         cluster_ctx = self.env_provider.determine_cluster_context()
         finops_policy = self.policy_manager.get_policy("finops")
-        
+
         report = AuditReport(
-            context_name=context_name,
-            timestamp=datetime.now(),
-            cluster_context=cluster_ctx
+            context_name=context_name, timestamp=datetime.now(), cluster_context=cluster_ctx
         )
-        
+
         for rule in self.rules:
             # Policy section matching for specific rule (not used in current implementation)
             section_name = "small_files" if "SmallFiles" in rule.__class__.__name__ else "data_skew"
-            policy = {section_name: self.policy_manager.get_policy(section_name), "finops": finops_policy}
-            
+            policy = {
+                section_name: self.policy_manager.get_policy(section_name),
+                "finops": finops_policy,
+            }
+
             alert = rule.evaluate(plan, metrics, policy)
             if alert:
                 alert.context = context_name
                 report.alerts.append(alert)
-                
+
                 # Inject dedicated suggestion and cost calculations
                 suggestion = self.remediation_engine.generate_suggestion(alert, cluster_ctx)
                 report.suggestions.append(suggestion)
-                
+
                 report.total_estimated_waste_usd += self.cost_translator.calculate_waste(alert)
-                
+
         self.reporter.publish(report)

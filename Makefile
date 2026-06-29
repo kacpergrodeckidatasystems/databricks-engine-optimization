@@ -1,5 +1,5 @@
 # =========================================================================
-# ZMIENNE PROJEKTOWE
+# PROJECT VARIABLES
 # =========================================================================
 VENV = venv
 PYTHON = $(VENV)/bin/python
@@ -7,79 +7,58 @@ PIP = $(VENV)/bin/pip
 
 .PHONY: help venv clean clean-all docker-build docker-up docker-down test package
 
-# Domyślny target wyświetlający pomoc
+# Default target displaying help information
 help:
 	@echo "========================================================================="
-	@echo "📊 BESS APM AUDITOR - AUTOMATYZACJA ŚRODOWISKA LOCAL/DEV (PURE SPARK)"
+	@echo "BESS APM AUDITOR - LOCAL/DEV ENVIRONMENT AUTOMATION (PURE SPARK)"
 	@echo "========================================================================="
-	@echo "Dostępne polecenia:"
-	@echo "  make venv          - Tworzy lokalny venv (Py3.11) i instaluje [dev,test]"
-	@echo "  make test          - Uruchamia lokalne testy jednostkowe za pomocą pytest"
-	@echo "  make package       - Buduje komercyjny artefakt dystrybucyjny (.whl)"
-	@echo "  make docker-build  - Buduje zunifikowany obraz silnika PySpark od zera"
-	@echo "  make docker-up     - Uruchamia kontener wykonawczy w tle"
-	@echo "  make docker-down   - Zatrzymuje i usuwa kontenery dockerowe"
-	@echo "  make clean         - Usuwa cache i tymczasowe pliki budowania"
-	@echo "  make clean-all     - Usuwa to co 'clean' + całkowicie kasuje venv"
+	@echo "Available commands:"
+	@echo "  make venv          - Creates local venv (Py3.11) and installs [dev,test]"
+	@echo "  make test          - Runs local unit tests using pytest"
+	@echo "  make package       - Builds commercial distribution artifact (.whl)"
+	@echo "  make docker-build  - Builds unified PySpark engine image from scratch"
+	@echo "  make docker-up     - Runs execution container in the background"
+	@echo "  make docker-down   - Stops and removes docker containers"
+	@echo "  make clean         - Removes cache and temporary build files"
+	@echo "  make clean-all     - Removes what 'clean' does + completely deletes venv"
 	@echo "========================================================================="
 
 # =========================================================================
-# 💻 LOKALNE ŚRODOWISKO WIRTUALNE (VENV)
+# LOCAL VIRTUAL ENVIRONMENT (VENV)
 # =========================================================================
 venv:
-	@echo "🚀 Tworzenie odizolowanego venv opartego o Python 3.11..."
+	@echo "Creating isolated venv based on Python 3.11..."
 	python3.11 -m venv $(VENV)
-	@echo "⬆️ Aktualizacja pip..."
+	@echo "Upgrading pip..."
 	$(PIP) install --upgrade pip
-	@echo "📦 Instalacja projektu w trybie edytowalnym wraz z [dev,test]..."
+	@echo "Installing project in editable mode along with [dev,test]..."
 	$(PIP) install -e .[dev,test]
-	@echo "✅ Środowisko venv przygotowane. Aktywuj je: source venv/bin/activate"
+	@echo "Venv environment prepared. Activate it: source venv/bin/activate"
 
 # =========================================================================
-# 🧪 TESTY JEDNOSTKOWE
+# UNIT TESTS
 # =========================================================================
 test:
-	@if [ ! -d "$(VENV)" ]; then echo "❌ Błąd: Brak venv. Uruchom najpierw: make venv"; exit 1; fi
-	@echo "🧪 Uruchamianie testów jednostkowych wewnątrz venv..."
-	$(VENV)/bin/pytest tests/ --cov=src
+	@if [ ! -d "$(VENV)" ]; then echo "Error: Missing venv. Run first: make venv"; exit 1; fi
+	@echo "Running unit tests inside venv..."
+	docker exec -it apm-spark-runner pytest tests/
 
 # =========================================================================
-# 📦 BUDOWANIE ARTEFAKTU (.WHL)
+# ARTIFACT BUILDING (.WHL)
 # =========================================================================
 package:
-	@if [ ! -d "$(VENV)" ]; then echo "❌ Błąd: Brak venv. Uruchom najpierw: make venv"; exit 1; fi
-	@echo "🧹 Czyszczenie starych paczek..."
+	@if [ ! -d "$(VENV)" ]; then echo "Error: Missing venv. Run first: make venv"; exit 1; fi
+	@echo "Cleaning old packages..."
 	rm -rf build/ dist/ *.egg-info
-	@echo "🔌 Instalacja systemowego buildera..."
+	@echo "Upgrading system builder..."
 	$(PIP) install --upgrade build
-	@echo "📦 Kompilacja kodu do uniwersalnego Wheel (.whl) zablokowanego na Py3.11..."
+	@echo "Compiling code to universal Wheel (.whl) locked to Py3.11..."
 	$(PYTHON) -m build
-	@echo "✅ Artefakt zbudowany w katalogu dist/"
+	@echo "Artifact built in dist/ directory"
 
 # =========================================================================
-# 🐳 ORKIESTRACJA DOCKER-COMPOSE (PURE PYSPARK CORE)
+# DOCKER-COMPOSE ORCHESTRATION (PURE PYSPARK CORE)
 # =========================================================================
 docker-build:
-	@echo "🐳 Budowanie zunifikowanego obrazu PySpark..."
+	@echo "Building unified PySpark image..."
 	docker-compose build --no-cache
-
-docker-up:
-	@echo "🚀 Uruchamianie kontenera wykonawczego APM Auditor..."
-	docker-compose up -d
-
-docker-down:
-	@echo "🛑 Zatrzymywanie kontenera..."
-	docker-compose down
-
-# =========================================================================
-# 🧹 CZYSZCZENIE ŚRODOWISKA
-# =========================================================================
-clean:
-	@echo "🧹 Czyszczenie plików tymczasowych, cache i logów..."
-	rm -rf build/ dist/ *.egg-info .pytest_cache .coverage htmlcov
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	find . -type f -name "*.pyc" -delete
-
-clean-all: clean
-	@echo "💥 Całkowite usuwanie środowiska wirtualnego venv..."
-	rm -rf $(VENV)

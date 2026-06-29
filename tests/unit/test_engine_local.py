@@ -1,10 +1,10 @@
 # tests/unit/test_rules_local.py
 import sys
+
 sys.dont_write_bytecode = True
 
 import pytest
 import os
-from unittest.mock import Mock
 
 # Dynamically map project root for clean execution path imports
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -13,18 +13,14 @@ if project_root not in sys.path:
 
 from src.rules.physical_rules import (
     SmallFilesRule,
-    MissedBroadcastRule,
     TypeCastingRule as PhysicalTypeCastingRule,
-    OverPartitioningRule,
-    DataSkewRule,
-    MissingOptimizationRule
+    MissingOptimizationRule,
 )
 from src.rules.query_rules import (
     TypeCastingRule as QueryTypeCastingRule,
     CartesianProductRule,
     ExplodeAbuseRule,
-    RedundantScanRule,
-    NonVectorizedUdfRule
+    NonVectorizedUdfRule,
 )
 
 # Register the unit test suite marker globally for this module
@@ -38,7 +34,7 @@ class TestPhysicalRulesLocal:
         """Verify that the small files rule correctly triggers an alert when the file count exceeds the configured limit."""
         rule = SmallFilesRule(max_file_count=100)
         metrics = {"num_files": 200}
-        
+
         alert = rule.evaluate("", metrics, sample_policies)
         assert alert is not None
         assert alert.rule_id == "PERF-001"
@@ -48,7 +44,7 @@ class TestPhysicalRulesLocal:
         """Ensure no alert is triggered when the file count is safely below the threshold."""
         rule = SmallFilesRule(max_file_count=100)
         metrics = {"num_files": 30}
-        
+
         alert = rule.evaluate("", metrics, sample_policies)
         assert alert is None
 
@@ -58,7 +54,7 @@ class TestPhysicalRulesLocal:
         metrics = {
             "schema_fields": {
                 "voltage": "string",  # Anomaly: numerical metric stored as plain text
-                "current": "double"
+                "current": "double",
             }
         }
         alert = rule.evaluate("", metrics)
@@ -70,7 +66,7 @@ class TestPhysicalRulesLocal:
         rule = MissingOptimizationRule()
         plan = "Filter (temperature > 25.0)\nFileScan delta"
         metrics = {"num_files": 120}
-        
+
         alert = rule.evaluate(plan, metrics)
         if alert:
             assert alert.rule_id == "PERF-007"
@@ -83,7 +79,7 @@ class TestQueryRulesLocal:
         """Verify that an explicit cross join or Cartesian product triggers the correct engine rule ID (PERF-005)."""
         rule = CartesianProductRule()
         plan = "== Physical Plan ==\nCartesianProduct node execution"
-        
+
         alert = rule.evaluate(plan, {})
         assert alert is not None
         # MATCHING SIGNATURE: The engine maps Cartesian Product as PERF-005
@@ -94,7 +90,7 @@ class TestQueryRulesLocal:
         """Ensure a BroadcastNestedLoopJoin operation is flagged as a Cartesian product variant under rule PERF-005."""
         rule = CartesianProductRule()
         plan = "BroadcastNestedLoopJoin BuildRight, Cross"
-        
+
         alert = rule.evaluate(plan, {})
         assert alert is not None
         assert alert.rule_id == "PERF-005"
@@ -103,7 +99,7 @@ class TestQueryRulesLocal:
         """Detect table performance degradation caused by consecutive or unoptimized explode operations (PERF-008)."""
         rule = ExplodeAbuseRule()
         plan = "Generate explode(metrics)\n+- Generate explode(telemetry)"
-        
+
         alert = rule.evaluate(plan, {})
         assert alert is not None
         # MATCHING SIGNATURE: The engine maps explode abuse as PERF-008
@@ -113,7 +109,7 @@ class TestQueryRulesLocal:
         """Flag non-vectorized Python UDF execution blocks that prevent Catalyst optimization paths (PERF-010)."""
         rule = NonVectorizedUdfRule()
         plan = "Project [BatchEvalPython(my_func#123)]"
-        
+
         alert = rule.evaluate(plan, {})
         assert alert is not None
         assert alert.rule_id == "PERF-010"
@@ -123,7 +119,7 @@ class TestQueryRulesLocal:
         """Verify that explicit cast functions inside filter expressions are flagged for dynamic type casting overhead."""
         rule = QueryTypeCastingRule()
         plan = "Filter cast(voltage#123 as string) = '230'"
-        
+
         alert = rule.evaluate(plan, {"schema_fields": {}})
         assert alert is not None
         assert alert.rule_id == "PERF-003"

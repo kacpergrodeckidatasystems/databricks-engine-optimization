@@ -8,9 +8,9 @@ class VanillaSparkReader(IPlanReader):
         return self.df._jdf.queryExecution().toString()
 
     def get_physical_metrics(self) -> Dict[str, Any]:
-        # W czystym Sparku mapujemy schemat bez odwołań do Unity Catalog
+        # In pure Spark we map schema without references to Unity Catalog
         metrics = {
             "schema_fields": {f.name: f.dataType.simpleString() for f in self.df.schema},
-            "num_files": 0 # W czystym Sparku wyciągamy to z Hadoop FS API, jeśli podano ścieżkę
+            "num_files": 0,  # In pure Spark we extract this from Hadoop FS API, if path is provided
         }
         return metrics

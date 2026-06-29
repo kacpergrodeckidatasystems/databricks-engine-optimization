@@ -1,6 +1,5 @@
 FROM python:3.11-slim
 
-# 1. Instalacja Javy (JRE) oraz niezbędnych narzędzi systemowych
 RUN apt-get update && apt-get install -y \
     default-jre-headless \
     wget \
@@ -8,30 +7,24 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Definicja środowiska Spark 4.0.3 (Wersja zunifikowana)
 ENV SPARK_VERSION=4.0.3
 ENV HADOOP_VERSION=3
 ENV SPARK_HOME=/opt/spark
 
-# 3. Pobranie i rozpakowanie Sparka bezpośrednio w kontenerze z oficjalnego archiwum
 RUN wget -q https://dlcdn.apache.org/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz && \
     tar -xzf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz -C /opt && \
     mv /opt/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} ${SPARK_HOME} && \
     rm spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
 
-# 4. Konfiguracja zmiennych środowiskowych PySparka
 ENV PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
 ENV PYSPARK_PYTHON=python3
 ENV PYSPARK_DRIVER_PYTHON=python3
 
-# GWARANCJA POPRAWNYCH IMPORTÓW: Wymuszenie szukania modułów od roota /app
 ENV PYTHONPATH=/app
 
 WORKDIR /app
 
-# 5. Instalacja wszystkich zależności (Czysty Spark backend)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Domyślne polecenie: Kontener odpala powłokę Python (lub możesz tu wpisać swój skrypt triggerujący)
 CMD ["python3"]

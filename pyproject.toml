@@ -1,17 +1,17 @@
 [build-system]
-# Definicja standardowego silnika budującego paczkę .whl
+# Definition of standard build engine for .whl package
 requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "apm-spark-auditor"
 version = "1.0.0"
-description = "Zautomatyzowany silnik APM & FinOps dla Apache Spark i Databricks"
+description = "Automated APM & FinOps engine for Apache Spark and Databricks"
 readme = "README.md"
 authors = [
     { name = "Kacper Grodecki", email = "kacpra.grodeckiego@gmail.com" }
 ]
-# SZTYWNE BLOKOWANIE WERSJI: Wymuszamy Python 3.11 dla zachowania 100% parzystości
+# STRICT VERSION LOCKING: Enforce Python 3.11 to maintain 100% parity
 requires-python = "==3.11.*"
 classifiers = [
     "Programming Language :: Python :: 3.11",
@@ -21,24 +21,31 @@ classifiers = [
 ]
 
 # =========================================================================
-# 📦 ŚRODOWISKO PRODUKCYJNE (Core Dependencies)
+# 📦 PRODUCTION ENVIRONMENT (Core Dependencies)
 # =========================================================================
 dependencies = [
-    "pydantic>=2.0.0",      # Walidacja polityk i konfiguracji reguł
-    "sqlparse>=0.4.0",      # Parsowanie surowych planów SQL Catalysta
+    "pyspark>=4.0.3",       # Core engine for analyzing DataFrame objects and SparkSession
+    "pydantic>=2.0.0",      # Validation of policies and rule configurations
+    "sqlparse>=0.4.0",      # Parsing raw Catalyst SQL plans
 ]
 
+# =========================================================================
+# ⚙️ TERMINAL COMMAND REGISTRATION (Entry Points)
+# =========================================================================
+[project.scripts]
+apm-audit = "src.run.main_trigger:main"
+
+# =========================================================================
+# 🛠️ OPTIONAL DEPENDENCIES (Dev & Test)
+# =========================================================================
 [project.optional-dependencies]
 dev = [
-    "pyspark==4.0.3",
-    "delta-spark>=4.0.0,<4.1.0", # <-- POPRAWKA: dopasowanie do requirements.txt
+    "delta-spark>=4.0.0,<4.1.0",
     "black>=24.0.0",
     "ruff>=0.3.0",
+    "pytest",
+    "pytest-cov"
 ]
-
-# =========================================================================
-# 🧪 ŚRODOWISKO TESTOWE
-# =========================================================================
 test = [
     "pytest>=8.0.0",        
     "pytest-mock>=3.10.0",  
@@ -46,7 +53,7 @@ test = [
 ]
 
 # =========================================================================
-# ⚙️ KONFIGURACJA NARZĘDZI POMOCNICZYCH
+# ⚙️ AUXILIARY TOOLS CONFIGURATION
 # =========================================================================
 [tool.setuptools.packages.find]
 where = ["."]
@@ -56,18 +63,14 @@ exclude = ["docker*", "generators*", "tests*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-
-# POPRAWKA: Dodajemy instrukcję --ignore dla notatnika Databricks
 addopts = "--strict-markers --doctest-modules --ignore=tests/Run_Tests_Notebook.py -p no:cacheprovider"
-
-# POPRAWKA: Rejestracja wszystkich używanych markerów, aby zaspokoić --strict-markers
 markers = [
-    "unit: Testy jednostkowe oparte na mockach (szybkie)",
-    "integration: Testy integracyjne łączące komponenty",
-    "system: Testy systemowe i scenariusze End-to-End",
-    "local_spark: Testy przeznaczone wyłącznie dla lokalnego Sparka",
-    "databricks: Testy wymagające kontekstu chmury Databricks",
-    "slow: Testy wymagające większych zasobów czasowych"
+    "unit: Unit tests based on mocks (fast)",
+    "integration: Integration tests connecting components",
+    "system: System tests and End-to-End scenarios",
+    "local_spark: Tests designed exclusively for local Spark",
+    "databricks: Tests requiring Databricks cloud context",
+    "slow: Tests requiring more time resources"
 ]
 
 [tool.black]

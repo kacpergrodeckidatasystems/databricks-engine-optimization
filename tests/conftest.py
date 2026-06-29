@@ -2,7 +2,7 @@
 import sys
 import os
 import pytest
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import MagicMock
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType
 from datetime import datetime
@@ -18,6 +18,7 @@ if project_root not in sys.path:
 from src.auditor.models import Alert, ClusterContext, Suggestion, AuditReport
 from src.context.environment_provider import EnvironmentProvider
 
+
 # =========================================================================
 # ⚙️ PYTEST HOOKS & ADAPTIVE ORCHESTRATION (Files + Markers)
 # =========================================================================
@@ -28,13 +29,14 @@ def pytest_addoption(parser):
         action="store",
         default="local",
         choices=["local", "databricks"],
-        help="Select runtime target environment: 'local' or 'databricks'"
+        help="Select runtime target environment: 'local' or 'databricks'",
     )
+
 
 def pytest_runtest_setup(item):
     """
     Comprehensive test routing hook.
-    Automatically filters and skips test execution based on filename suffixes 
+    Automatically filters and skips test execution based on filename suffixes
     and explicit environment decorators/markers.
     """
     env_option = item.config.getoption("--env")
@@ -43,16 +45,17 @@ def pytest_runtest_setup(item):
     # 1. Route based on file name patterns (*_local.py / *_databricks.py)
     if "_databricks" in file_name and env_option != "databricks":
         pytest.skip(f"🔒 Skipped {file_name}: Test module requires Databricks environment")
-        
+
     if "_local" in file_name and env_option != "local":
         pytest.skip(f"🔒 Skipped {file_name}: Test module is dedicated to local environment")
 
     # 2. Route based on explicit decorator markers (for shared files like integration tests)
     if "databricks" in item.keywords and env_option != "databricks":
         pytest.skip("🔒 Skipped test: Requires Databricks runtime context (--env=databricks)")
-        
+
     if "local_spark" in item.keywords and env_option != "local":
         pytest.skip("🔒 Skipped test: Dedicated to vanilla local Spark context (--env=local)")
+
 
 # =========================================================================
 # 🌍 ENVIRONMENT-AWARE FIXTURES
@@ -62,10 +65,12 @@ def environment_type(request):
     """Returns the active environment configuration string passed via CLI option."""
     return request.config.getoption("--env")
 
+
 @pytest.fixture
 def is_databricks(environment_type):
     """Returns a boolean flag indicating if the target context is Databricks."""
     return environment_type == "databricks"
+
 
 @pytest.fixture(scope="session")
 def spark_session(request):
@@ -76,23 +81,26 @@ def spark_session(request):
     env = request.config.getoption("--env")
     if env == "databricks":
         os.environ["DATABRICKS_RUNTIME_VERSION"] = "17.x-DBR"
-        spark = SparkSession.builder \
-            .appName("APM-Auditor-Databricks-Simulation") \
-            .master("local[*]") \
-            .config("spark.sql.catalogImplementation", "hive") \
+        spark = (
+            SparkSession.builder.appName("APM-Auditor-Databricks-Simulation")
+            .master("local[*]")
+            .config("spark.sql.catalogImplementation", "hive")
             .getOrCreate()
+        )
         yield spark
         spark.stop()
         if "DATABRICKS_RUNTIME_VERSION" in os.environ:
             del os.environ["DATABRICKS_RUNTIME_VERSION"]
     else:
-        spark = SparkSession.builder \
-            .appName("APM-Auditor-Vanilla-Local-Test") \
-            .master("local[*]") \
-            .config("spark.sql.shuffle.partitions", "2") \
+        spark = (
+            SparkSession.builder.appName("APM-Auditor-Vanilla-Local-Test")
+            .master("local[*]")
+            .config("spark.sql.shuffle.partitions", "2")
             .getOrCreate()
+        )
         yield spark
         spark.stop()
+
 
 @pytest.fixture
 def mock_spark():
@@ -105,6 +113,7 @@ def mock_spark():
     spark.catalog.tableExists = MagicMock(return_value=True)
     return spark
 
+
 @pytest.fixture
 def spark_or_mock(environment_type, mock_spark, spark_session):
     """Adaptive fixture injecting either a live functional SparkSession or a fast isolation mock."""
@@ -112,21 +121,26 @@ def spark_or_mock(environment_type, mock_spark, spark_session):
         return spark_session
     return mock_spark
 
+
 @pytest.fixture
 def mock_dbutils():
     """Provides a safe DBUtils file system mock for testing paths without storage dependencies."""
     dbutils = MagicMock()
+
     class MockFileInfo:
         def __init__(self, path, size):
             self.path = path
             self.size = size
-    
-    dbutils.fs.ls = MagicMock(return_value=[
-        MockFileInfo("/path/file1.parquet", 1024),
-        MockFileInfo("/path/file2.parquet", 2048),
-        MockFileInfo("/path/_delta_log/", 512)
-    ])
+
+    dbutils.fs.ls = MagicMock(
+        return_value=[
+            MockFileInfo("/path/file1.parquet", 1024),
+            MockFileInfo("/path/file2.parquet", 2048),
+            MockFileInfo("/path/_delta_log/", 512),
+        ]
+    )
     return dbutils
+
 
 @pytest.fixture
 def dbutils_or_mock(environment_type, mock_dbutils):
@@ -134,16 +148,19 @@ def dbutils_or_mock(environment_type, mock_dbutils):
     if environment_type == "databricks":
         try:
             from pyspark.dbutils import DBUtils
+
             spark = SparkSession.builder.getOrCreate()
             return DBUtils(spark)
         except:
             return mock_dbutils
     return mock_dbutils
 
+
 @pytest.fixture
 def environment_provider(spark_or_mock):
     """Returns a configured EnvironmentProvider instance wrapping the appropriate execution engine."""
     return EnvironmentProvider(spark_or_mock)
+
 
 # =========================================================================
 # 📊 MODEL DATA FIXTURES & SAMPLES
@@ -155,8 +172,9 @@ def sample_policies():
         "small_files": {"max_file_count": 100, "threshold_size_mb": 10.0},
         "data_skew": {"max_duration_ratio": 5.0},
         "over_partitioning": {"max_partitions": 1000},
-        "finops": {"dbu_cost_per_hour": 0.40, "estimated_core_count": 8}
+        "finops": {"dbu_cost_per_hour": 0.40, "estimated_core_count": 8},
     }
+
 
 @pytest.fixture
 def sample_alert():
@@ -167,13 +185,15 @@ def sample_alert():
         description="Table contains 200 files, exceeding recommended threshold of 100.",
         fix="Run OPTIMIZE operation on the table.",
         severity="WARNING",
-        context="test_context"
+        context="test_context",
     )
+
 
 @pytest.fixture
 def sample_cluster_context():
     """Provides a baseline ClusterContext telemetry entity configuration."""
     return ClusterContext(is_serverless=True, aqe_enabled=True, photon_enabled=True)
+
 
 @pytest.fixture
 def sample_suggestion():
@@ -181,8 +201,9 @@ def sample_suggestion():
     return Suggestion(
         rule_id="PERF-001",
         remediation_text="Run data compaction operation.",
-        code_template='spark.sql("OPTIMIZE {table_name}")'
+        code_template='spark.sql("OPTIMIZE {table_name}")',
     )
+
 
 @pytest.fixture
 def sample_audit_report(sample_cluster_context):
@@ -193,8 +214,9 @@ def sample_audit_report(sample_cluster_context):
         cluster_context=sample_cluster_context,
         alerts=[],
         suggestions=[],
-        total_estimated_waste_usd=0.0
+        total_estimated_waste_usd=0.0,
     )
+
 
 @pytest.fixture
 def sample_explain_plan():
@@ -208,24 +230,28 @@ def sample_explain_plan():
     +- SortMergeJoin [id#123], [station_id#789]
     """
 
+
 @pytest.fixture
 def sample_metrics():
     """Provides a data dictionary representing file metrics and layout configurations."""
     return {
         "num_files": 200,
         "total_size_bytes": 1048576,
-        "schema_fields": {"id": "int", "temperature": "string"}
+        "schema_fields": {"id": "int", "temperature": "string"},
     }
+
 
 @pytest.fixture
 def mock_dataframe():
     """Returns a mocked PySpark DataFrame structure with static telemetry schema configurations."""
     df = MagicMock()
-    df.schema = StructType([
-        StructField("id", IntegerType(), True),
-        StructField("temperature", StringType(), True),
-        StructField("voltage", DoubleType(), True),
-        StructField("timestamp", StringType(), True)
-    ])
+    df.schema = StructType(
+        [
+            StructField("id", IntegerType(), True),
+            StructField("temperature", StringType(), True),
+            StructField("voltage", DoubleType(), True),
+            StructField("timestamp", StringType(), True),
+        ]
+    )
     df.createOrReplaceTempView = MagicMock()
     return df
