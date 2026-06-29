@@ -1,4 +1,4 @@
-from src.auditor.models import Alert
+from apm_spark_auditor.auditor.models import Alert
 from typing import Dict, Any
 
 

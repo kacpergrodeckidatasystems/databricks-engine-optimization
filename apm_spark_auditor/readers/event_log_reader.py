@@ -1,5 +1,5 @@
-from src.auditor.models import IMetricsReader
-from src.decorators import trace_execution, safe_execution
+from apm_spark_auditor.auditor.models import IMetricsReader
+from apm_spark_auditor.decorators import trace_execution, safe_execution
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from typing import Dict, Any

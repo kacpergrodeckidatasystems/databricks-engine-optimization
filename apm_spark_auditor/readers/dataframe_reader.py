@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, Any
-from src.auditor.models import IMetricsReader
-from src.decorators import trace_execution, safe_execution
+from apm_spark_auditor.auditor.models import IMetricsReader
+from apm_spark_auditor.decorators import trace_execution, safe_execution
 from pyspark.sql import DataFrame, SparkSession
 
 logger = logging.getLogger("DataFrameExplainReader")

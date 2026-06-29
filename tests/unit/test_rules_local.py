@@ -2,12 +2,12 @@ import sys
 
 import pytest
 
-from src.rules.physical_rules import (
+from apm_spark_auditor.rules.physical_rules import (
     MissingOptimizationRule,
     SmallFilesRule,
     TypeCastingRule as PhysicalTypeCastingRule,
 )
-from src.rules.query_rules import (
+from apm_spark_auditor.rules.query_rules import (
     CartesianProductRule,
     ExplodeAbuseRule,
     NonVectorizedUdfRule,

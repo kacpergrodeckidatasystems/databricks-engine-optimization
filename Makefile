@@ -62,3 +62,22 @@ package:
 docker-build:
 	@echo "Building unified PySpark image..."
 	docker-compose build --no-cache
+
+build:
+	@if [ ! -d "$(VENV)" ]; then echo "Error: Missing venv. Run first: make venv"; exit 1; fi
+	@echo "Installing build dependencies..."
+	$(VENV)/bin/pip install --upgrade build
+	@echo "Compiling the project..."
+	$(VENV)/bin/python3 -m build
+	@echo "Cleaning up local build artifacts to prevent Docker path pollution..."
+	rm -rf *.egg-info  # <-- Ta linia ratuje sytuację przed zanieczyszczeniem wolumenu /app
+	@echo "Package successfully generated in dist/ directory!"
+
+publish:
+	@if [ ! -d "$(VENV)" ]; then echo "Error: Missing venv. Run first: make venv"; exit 1; fi
+	@echo "Upgrading Twine inside venv..."
+	$(VENV)/bin/pip install --upgrade twine
+	@echo "Checking package integrity & metadata format..."
+	$(VENV)/bin/twine check dist/*
+	@echo "Uploading distribution packages to PyPI..."
+	$(VENV)/bin/twine upload dist/*

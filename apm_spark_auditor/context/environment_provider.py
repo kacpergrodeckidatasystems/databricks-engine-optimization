@@ -1,5 +1,5 @@
 import logging
-from src.auditor.models import ClusterContext
+from apm_spark_auditor.auditor.models import ClusterContext
 from pyspark.sql import SparkSession
 
 logger = logging.getLogger("APM.Environment")

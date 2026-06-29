@@ -1,4 +1,4 @@
-from src.auditor.models import IAnalysisRule, Alert
+from apm_spark_auditor.auditor.models import IAnalysisRule, Alert
 from typing import Dict, Any, Optional
 
 

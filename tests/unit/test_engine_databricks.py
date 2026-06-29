@@ -10,8 +10,8 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from src.auditor.models import Alert, ClusterContext
-from src.suggestions.remediation_engine import RemediationEngine
+from apm_spark_auditor.auditor.models import Alert, ClusterContext
+from apm_spark_auditor.suggestions.remediation_engine import RemediationEngine
 
 
 @pytest.mark.unit

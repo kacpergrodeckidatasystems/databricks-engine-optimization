@@ -4,8 +4,8 @@ import sys
 
 import pytest
 
-from src.rules.physical_rules import SmallFilesRule
-from src.rules.query_rules import CartesianProductRule
+from apm_spark_auditor.rules.physical_rules import SmallFilesRule
+from apm_spark_auditor.rules.query_rules import CartesianProductRule
 
 sys.dont_write_bytecode = True
 

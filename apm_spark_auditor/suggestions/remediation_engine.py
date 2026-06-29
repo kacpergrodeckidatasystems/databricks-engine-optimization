@@ -1,5 +1,5 @@
-from src.auditor.models import Alert, ClusterContext, Suggestion
-from src.suggestions.suggestions_templates import TEMPLATES
+from apm_spark_auditor.auditor.models import Alert, ClusterContext, Suggestion
+from apm_spark_auditor.suggestions.suggestions_templates import TEMPLATES
 
 
 class RemediationEngine:

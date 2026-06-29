@@ -2,8 +2,7 @@
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 from pyspark.sql.types import StringType
-from src.run.main_trigger import APMAutomatedOrchestrator
-
+from apm_spark_auditor import APMAuditor
 # 1. Start local Spark session
 spark = (
     SparkSession.builder.master("local[*]")
@@ -31,7 +30,7 @@ df_meta = spark.createDataFrame([("Main_Cluster",)], ["cluster_name"])
 df_final = df_redundant.crossJoin(df_meta)
 
 # 2. Run audit through the official, clean framework API
-orchestrator = APMAutomatedOrchestrator(spark)
+orchestrator = APMAuditor(spark)
 result = orchestrator.run_smart_scan(
     df=df_final,
     custom_context="enterprise_bess_heavy_telemetry_pipeline",
