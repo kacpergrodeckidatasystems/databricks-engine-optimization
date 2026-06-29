@@ -1,6 +1,7 @@
 from src.auditor.models import Alert
 from typing import Dict, Any
 
+
 class CostTranslator:
     def __init__(self, finops_policy: Dict[str, Any]):
         self.dbu_cost = finops_policy.get("dbu_cost_per_hour", 0.40)
@@ -12,6 +13,7 @@ class CostTranslator:
             # Exponential increase in metadata management cost for thousands of small files
             # Try to extract file count from alert description
             import re
+
             match = re.search(r"(\d+)\s+file", alert.description)
             files = int(match.group(1)) if match else 100
             return round((files * 0.0015) * self.dbu_cost, 4)

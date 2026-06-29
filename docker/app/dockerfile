@@ -1,0 +1,30 @@
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y \
+    default-jre-headless \
+    wget \
+    procps \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV SPARK_VERSION=4.0.3
+ENV HADOOP_VERSION=3
+ENV SPARK_HOME=/opt/spark
+
+RUN wget -q https://dlcdn.apache.org/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz && \
+    tar -xzf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz -C /opt && \
+    mv /opt/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} ${SPARK_HOME} && \
+    rm spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
+
+ENV PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
+ENV PYSPARK_PYTHON=python3
+ENV PYSPARK_DRIVER_PYTHON=python3
+
+ENV PYTHONPATH=/app
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+CMD ["python3"]

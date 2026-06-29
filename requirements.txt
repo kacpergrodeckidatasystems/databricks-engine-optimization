@@ -1,0 +1,10 @@
+# requirements.txt - Pure PySpark Engine (Fixed Parity)
+pyspark==4.0.3
+delta-spark>=4.0.0,<4.1.0
+pydantic>=2.0.0
+sqlparse>=0.4.0
+pytest>=8.0.0
+pytest-mock>=3.10.0
+coverage>=7.0.0
+black>=24.0.0
+ruff>=0.3.0

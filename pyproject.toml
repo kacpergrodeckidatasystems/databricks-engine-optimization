@@ -1,0 +1,84 @@
+[build-system]
+# Definition of standard build engine for .whl package
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "apm-spark-auditor"
+version = "1.0.0"
+description = "Automated APM & FinOps engine for Apache Spark and Databricks"
+readme = "README.md"
+authors = [
+    { name = "Kacper Grodecki", email = "kacpra.grodeckiego@gmail.com" }
+]
+# STRICT VERSION LOCKING: Enforce Python 3.11 to maintain 100% parity
+requires-python = "==3.11.*"
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+# =========================================================================
+# 📦 PRODUCTION ENVIRONMENT (Core Dependencies)
+# =========================================================================
+dependencies = [
+    "pyspark>=4.0.3",       # Core engine for analyzing DataFrame objects and SparkSession
+    "pydantic>=2.0.0",      # Validation of policies and rule configurations
+    "sqlparse>=0.4.0",      # Parsing raw Catalyst SQL plans
+]
+
+# =========================================================================
+# ⚙️ TERMINAL COMMAND REGISTRATION (Entry Points)
+# =========================================================================
+[project.scripts]
+apm-audit = "src.run.main_trigger:main"
+
+# =========================================================================
+# 🛠️ OPTIONAL DEPENDENCIES (Dev & Test)
+# =========================================================================
+[project.optional-dependencies]
+dev = [
+    "delta-spark>=4.0.0,<4.1.0",
+    "black>=24.0.0",
+    "ruff>=0.3.0",
+    "pytest",
+    "pytest-cov"
+]
+test = [
+    "pytest>=8.0.0",        
+    "pytest-mock>=3.10.0",  
+    "coverage>=7.0.0",      
+]
+
+# =========================================================================
+# ⚙️ AUXILIARY TOOLS CONFIGURATION
+# =========================================================================
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+exclude = ["docker*", "generators*", "tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "--strict-markers --doctest-modules --ignore=tests/Run_Tests_Notebook.py -p no:cacheprovider"
+markers = [
+    "unit: Unit tests based on mocks (fast)",
+    "integration: Integration tests connecting components",
+    "system: System tests and End-to-End scenarios",
+    "local_spark: Tests designed exclusively for local Spark",
+    "databricks: Tests requiring Databricks cloud context",
+    "slow: Tests requiring more time resources"
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "W", "C90"]
+ignore = ["E501"]

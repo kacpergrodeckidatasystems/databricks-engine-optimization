@@ -27,7 +27,9 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 # Copy tests to /tmp (which supports __pycache__) to avoid Workspace filesystem issues
-workspace_tests = "/Workspace/Users/kacpra.grodeckiego@gmail.com/databricks-engine-optimization/tests"
+workspace_tests = (
+    "/Workspace/Users/kacpra.grodeckiego@gmail.com/databricks-engine-optimization/tests"
+)
 tmp_tests = "/tmp/databricks-engine-optimization-tests"
 
 # Remove old copy if exists
@@ -38,7 +40,7 @@ if os.path.exists(tmp_tests):
 shutil.copytree(workspace_tests, tmp_tests)
 
 print(f"Project root: {project_root}")
-print(f"Python path configured")
+print("Python path configured")
 print(f"Tests copied to: {tmp_tests}")
 
 # COMMAND ----------
@@ -51,12 +53,7 @@ print("=" * 60)
 print("Running Unit Tests")
 print("=" * 60)
 
-result = pytest.main([
-    "/tmp/databricks-engine-optimization-tests/unit",
-    "-v",
-    "--tb=short",
-    "-ra"
-])
+result = pytest.main(["/tmp/databricks-engine-optimization-tests/unit", "-v", "--tb=short", "-ra"])
 
 print(f"\nUnit Tests Result: {'PASSED' if result == 0 else 'FAILED'}")
 
@@ -67,12 +64,9 @@ print("=" * 60)
 print("Running Integration Tests")
 print("=" * 60)
 
-result = pytest.main([
-    "/tmp/databricks-engine-optimization-tests/integration",
-    "-v",
-    "--tb=short",
-    "-ra"
-])
+result = pytest.main(
+    ["/tmp/databricks-engine-optimization-tests/integration", "-v", "--tb=short", "-ra"]
+)
 
 print(f"\nIntegration Tests Result: {'PASSED' if result == 0 else 'FAILED'}")
 
@@ -83,12 +77,9 @@ print("=" * 60)
 print("Running System Tests")
 print("=" * 60)
 
-result = pytest.main([
-    "/tmp/databricks-engine-optimization-tests/system",
-    "-v",
-    "--tb=short",
-    "-ra"
-])
+result = pytest.main(
+    ["/tmp/databricks-engine-optimization-tests/system", "-v", "--tb=short", "-ra"]
+)
 
 print(f"\nSystem Tests Result: {'PASSED' if result == 0 else 'FAILED'}")
 
@@ -99,11 +90,13 @@ print("=" * 60)
 print("Running All Tests with Coverage")
 print("=" * 60)
 
-result = pytest.main([
-    "/tmp/databricks-engine-optimization-tests",
-    "--cov=/Workspace/Users/kacpra.grodeckiego@gmail.com/databricks-engine-optimization/src",
-    "--cov-report=term-missing",
-    "-v"
-])
+result = pytest.main(
+    [
+        "/tmp/databricks-engine-optimization-tests",
+        "--cov=/Workspace/Users/kacpra.grodeckiego@gmail.com/databricks-engine-optimization/src",
+        "--cov-report=term-missing",
+        "-v",
+    ]
+)
 
 print(f"\nAll Tests Result: {'PASSED' if result == 0 else 'FAILED'}")

@@ -6,10 +6,17 @@ from pyspark.sql import DataFrame, SparkSession
 
 logger = logging.getLogger("DataFrameExplainReader")
 
+
 class DataFrameExplainReader(IMetricsReader):
-    def __init__(self, spark: SparkSession, df: DataFrame = None, table_name: str = None, source_volume_path: str = None):
+    def __init__(
+        self,
+        spark: SparkSession,
+        df: DataFrame = None,
+        table_name: str = None,
+        source_volume_path: str = None,
+    ):
         """
-        Defensive metadata reader supporting cloud table text paths 
+        Defensive metadata reader supporting cloud table text paths
         and direct in-memory DataFrame object instances.
         """
         self.spark = spark
@@ -24,7 +31,9 @@ class DataFrameExplainReader(IMetricsReader):
                 clean_name = self.table_name.replace("`", "")
                 exists = self.spark.catalog.tableExists(clean_name)
                 if not exists:
-                    logger.error(f"[FAIL-FAST] Table '{clean_name}' does not exist in Unity Catalog.")
+                    logger.error(
+                        f"[FAIL-FAST] Table '{clean_name}' does not exist in Unity Catalog."
+                    )
                     return False
                 return True
             except Exception as e:
@@ -46,7 +55,7 @@ class DataFrameExplainReader(IMetricsReader):
             clean_name = self.table_name.replace("`", "")
             plan_df = self.spark.sql(f"EXPLAIN EXTENDED SELECT * FROM {clean_name}")
             return plan_df.take(1)[0][0]
-        
+
         # PATH B: If examining direct DataFrame object passed on the fly (e.g., Audit 1)
         self.df.createOrReplaceTempView("temp_auditor_view")
         plan_df = self.spark.sql("EXPLAIN EXTENDED SELECT * FROM temp_auditor_view")
@@ -57,7 +66,7 @@ class DataFrameExplainReader(IMetricsReader):
     def get_physical_metrics(self) -> Dict[str, Any]:
         """Aggregates structural metrics from schema and volumetrics from physical directories."""
         metrics = {"num_files": 0, "total_size_bytes": 0, "schema_fields": {}}
-        
+
         # Lazy DataFrame binding based on name, if df object is empty
         if self.df is None and self.table_name:
             try:
@@ -68,18 +77,21 @@ class DataFrameExplainReader(IMetricsReader):
 
         if self.df is not None:
             try:
-                metrics["schema_fields"] = {f.name: f.dataType.simpleString() for f in self.df.schema}
+                metrics["schema_fields"] = {
+                    f.name: f.dataType.simpleString() for f in self.df.schema
+                }
             except Exception as e:
                 logger.warning(f"[METRICS-SKIP] Schema mapping error: {str(e)}")
-        
+
         if self.source_path:
             try:
                 from pyspark.dbutils import DBUtils
+
                 dbutils = DBUtils(self.spark)
                 files = [f for f in dbutils.fs.ls(self.source_path) if "_delta_log" not in f.path]
                 metrics["num_files"] = len(files)
                 metrics["total_size_bytes"] = sum([f.size for f in files])
             except Exception as e:
                 logger.warning(f"[METRICS-SKIP] File volumetrics read error: {str(e)}")
-                
+
         return metrics

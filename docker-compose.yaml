@@ -1,0 +1,10 @@
+services:
+  apm-auditor-runner:
+    build:
+      context: .
+      dockerfile: docker/app/dockerfile  
+    container_name: apm-spark-runner
+    volumes:
+      - .:/app
+    tty: true 
+    stdin_open: true
